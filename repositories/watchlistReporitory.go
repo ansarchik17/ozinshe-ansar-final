@@ -3,6 +3,8 @@ package repositories
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
+	"goozinshe/logger"
 	"goozinshe/models"
 	"time"
 )
@@ -33,9 +35,11 @@ join movies_genres mg on m.id = mg.movie_id
 join genres g on mg.genre_id = g.id
 order by wl.added_at
 `
+	logger := logger.GetLogger()
 
 	rows, err := r.db.Query(c, sql)
 	if err != nil {
+		logger.Error("Could not get movies from watchlist", zap.String("db_msg", err.Error()))
 		return nil, err
 	}
 	defer rows.Close()
@@ -48,6 +52,7 @@ order by wl.added_at
 		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.ReleaseYear, &movie.Director,
 			&movie.Rating, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
 		if err != nil {
+			logger.Error(err.Error())
 			return nil, err
 		}
 
@@ -59,6 +64,7 @@ order by wl.added_at
 		moviesMap[movie.Id].Genres = append(moviesMap[movie.Id].Genres, genre)
 	}
 	if err := rows.Err(); err != nil {
+		logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -72,11 +78,21 @@ order by wl.added_at
 }
 
 func (r *WatchlistRepository) AddToWatchlist(c context.Context, movieId int) error {
+	logger := logger.GetLogger()
 	_, err := r.db.Exec(c, "insert into watchlist(movie_id, added_at) values($1, $2)", movieId, time.Now())
+	if err != nil {
+		logger.Error("Could not add to watchlist", zap.String("db_msg", err.Error()))
+		return err
+	}
 	return err
 }
 
 func (r *WatchlistRepository) RemoveFromWatchlist(c context.Context, movieId int) error {
+	logger := logger.GetLogger()
 	_, err := r.db.Exec(c, "delete from watchlist where movie_id = $1", movieId)
+	if err != nil {
+		logger.Error("Could not remove from watchlist", zap.String("db_msg", err.Error()))
+		return err
+	}
 	return err
 }

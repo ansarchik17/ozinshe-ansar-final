@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"goozinshe/logger"
 	"goozinshe/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,9 +19,11 @@ func NewGenresRepository(conn *pgxpool.Pool) *GenresRepository {
 
 func (r *GenresRepository) FindById(c context.Context, id int) (models.Genre, error) {
 	var genre models.Genre
+	logger := logger.GetLogger()
 	row := r.db.QueryRow(c, "select id, title from genres where id = $1", id)
 	err := row.Scan(&genre.Id, &genre.Title)
 	if err != nil {
+		logger.Error("Could not find genre", zap.String("db_msg", err.Error()))
 		return models.Genre{}, err
 	}
 
@@ -27,9 +31,11 @@ func (r *GenresRepository) FindById(c context.Context, id int) (models.Genre, er
 }
 
 func (r *GenresRepository) FindAll(c context.Context) ([]models.Genre, error) {
+	logger := logger.GetLogger()
 	rows, err := r.db.Query(c, "select id, title from genres")
 	defer rows.Close()
 	if err != nil {
+		logger.Error("Could not find all genres", zap.String("db_msg", err.Error()))
 		return nil, err
 	}
 
@@ -39,6 +45,7 @@ func (r *GenresRepository) FindAll(c context.Context) ([]models.Genre, error) {
 		var genre models.Genre
 		err = rows.Scan(&genre.Id, &genre.Title)
 		if err != nil {
+			logger.Error(err.Error())
 			return nil, err
 		}
 
@@ -49,9 +56,11 @@ func (r *GenresRepository) FindAll(c context.Context) ([]models.Genre, error) {
 }
 
 func (r *GenresRepository) FindAllByIds(c context.Context, ids []int) ([]models.Genre, error) {
+	logger := logger.GetLogger()
 	rows, err := r.db.Query(c, "select id, title from genres where id = any($1)", ids)
 	defer rows.Close()
 	if err != nil {
+		logger.Error("Could not find all genres by their ids", zap.String("db_msg", err.Error()))
 		return nil, err
 	}
 
@@ -61,6 +70,7 @@ func (r *GenresRepository) FindAllByIds(c context.Context, ids []int) ([]models.
 		var genre models.Genre
 		err = rows.Scan(&genre.Id, &genre.Title)
 		if err != nil {
+			logger.Error(err.Error())
 			return nil, err
 		}
 
@@ -72,9 +82,11 @@ func (r *GenresRepository) FindAllByIds(c context.Context, ids []int) ([]models.
 
 func (r *GenresRepository) Create(c context.Context, genre models.Genre) (int, error) {
 	var id int
+	logger := logger.GetLogger()
 	row := r.db.QueryRow(c, "insert into genres (title) values ($1) returning id", genre.Title)
 	err := row.Scan(&id)
 	if err != nil {
+		logger.Error(err.Error())
 		return 0, nil
 	}
 
@@ -82,8 +94,10 @@ func (r *GenresRepository) Create(c context.Context, genre models.Genre) (int, e
 }
 
 func (r *GenresRepository) Update(c context.Context, id int, genre models.Genre) error {
+	logger := logger.GetLogger()
 	_, err := r.db.Exec(c, "update genres set title = $1 where id = $2", genre.Title, genre.Id)
 	if err != nil {
+		logger.Error("Could not update genre", zap.String("db_msg", err.Error()))
 		return err
 	}
 
@@ -91,8 +105,10 @@ func (r *GenresRepository) Update(c context.Context, id int, genre models.Genre)
 }
 
 func (r *GenresRepository) Delete(c context.Context, id int) error {
+	logger := logger.GetLogger()
 	_, err := r.db.Exec(c, "delete from genres where id = $1", id)
 	if err != nil {
+		logger.Error("Could not delete genre", zap.String("db_msg", err.Error()))
 		return err
 	}
 

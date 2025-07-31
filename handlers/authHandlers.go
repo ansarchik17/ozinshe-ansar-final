@@ -3,8 +3,10 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"goozinshe/config"
+	"goozinshe/logger"
 	"goozinshe/models"
 	"goozinshe/repositories"
 	"net/http"
@@ -26,20 +28,24 @@ type signInRequest struct {
 }
 
 func (h *AuthHandlers) SignIn(c *gin.Context) {
+	logger := logger.GetLogger()
 	var request signInRequest
 	err := c.BindJSON(&request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.ApiError{"Invalid request parameters"})
+		logger.Error("Could not sign in to the account", zap.Error(err))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid request parameters"))
 		return
 	}
 	user, err := h.userRepo.FindByEmail(c, request.Email)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.ApiError{err.Error()})
+		logger.Error(err.Error())
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.ApiError{"Invalid credials"})
+		logger.Error(err.Error())
+		c.JSON(http.StatusUnauthorized, models.NewApiError("Invalid credials"))
 		return
 	}
 	claims := jwt.RegisteredClaims{
@@ -49,7 +55,8 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(config.Config.JwtSecretKey))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ApiError{"Couldn't sign JWT"})
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't sign JWT"))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
@@ -60,9 +67,11 @@ func (h *AuthHandlers) SignOut(c *gin.Context) {
 }
 
 func (h *AuthHandlers) GetUserInfo(c *gin.Context) {
+	logger := logger.GetLogger()
 	userId := c.GetInt("userId")
 	user, err := h.userRepo.FindById(c, userId)
 	if err != nil {
+		logger.Error("Could not find user", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.NewApiError("user not found"))
 		return
 	}

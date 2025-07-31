@@ -7,10 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
-	swaggerfiles "github.com/swaggo/files"
-	swagger "github.com/swaggo/gin-swagger"
 	"goozinshe/config"
-	"goozinshe/docs"
 	"goozinshe/handlers"
 	"goozinshe/logger"
 	"goozinshe/middlewares"
@@ -18,41 +15,15 @@ import (
 	"time"
 )
 
-// @title           Ozinshe API
-// @version         1.0
-// @description     This is a simple celler server
-// @termsOfService  http://swagger.io/terms/
-//
-// @contact.name   API Support
-// @contact.url    http://www.swagger.io/support
-// @contact.email  support@swagger.io
-//
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
-//
-// @host      localhost:8070
-// @BasePath  /
-//
-// @securityDefinitions.apikey Bearer
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
-//
-// @externalDocs.description  OpenAPI
-// @externalDocs.url          https://swagger.io/resources/open-api/
-
 func main() {
 	r := gin.New()
-	gin.SetMode(gin.ReleaseMode)
+
 	logger := logger.GetLogger()
-	//err := r.SetTrustedProxies(nil)
-	//if err != nil {
-	//	log.Fatalf("Failed to set trusted proxies: %v", err)
-	//}
 	r.Use(
 		ginzap.Ginzap(logger, time.RFC3339, true),
 		ginzap.RecoveryWithZap(logger, true),
 	)
+
 	corsConfig := cors.Config{
 		AllowAllOrigins: true,
 		AllowHeaders:    []string{"*"},
@@ -116,9 +87,6 @@ func main() {
 	unauthorized := r.Group("")
 	unauthorized.POST("/auth/signIn", authHandlers.SignIn)
 	unauthorized.GET("/images/:imageId", imageHandler.HandleGetImageById)
-
-	docs.SwaggerInfo.BasePath = "/"
-	unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))
 
 	logger.Info("Application starting...")
 

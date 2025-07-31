@@ -37,4 +37,4 @@ docker run --name ozinshe-ui -p "8080:3000" -e VITE_API_URL="http://localhost:80
 
 Для логина используй:
 * логин: `admin@admin.com`
-* пароль: `admin`
+* пароль: `jsgpcmR41%gsk24`

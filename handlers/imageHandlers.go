@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 )
 
-type imageHandlers struct{}
+type ImageHandlers struct{}
 
-func NewImageHandlers() *imageHandlers {
-	return &imageHandlers{}
+func NewImageHandlers() *ImageHandlers {
+	return &ImageHandlers{}
 }
 
-func (h *imageHandlers) HandleGetImageById(c *gin.Context) {
+func (h *ImageHandlers) HandleGetImageById(c *gin.Context) {
 	imageId := c.Param("imageId")
 	if imageId == "" {
 		c.JSON(http.StatusBadRequest, "Invalid image id")

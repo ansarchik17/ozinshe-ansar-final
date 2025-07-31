@@ -84,10 +84,9 @@ where m.id = $1
 
 	err = rows.Err()
 	if err != nil {
-		logger.Error("Error occurred during row scan", zap.String("db_msg", err.Error()))
+		logger.Error(err.Error())
 		return models.Movie{}, err
 	}
-
 	return *movie, nil
 }
 
@@ -111,6 +110,9 @@ join movies_genres mg on mg.movie_id = m.id
 join genres g on mg.genre_id  = g.id
 where 1 = 1
 `
+
+	logger := logger.GetLogger()
+
 	params := pgx.NamedArgs{}
 	if filters.SearchTerm != "" {
 		sql = fmt.Sprintf("%s and m.title ilike @s", sql)
@@ -131,6 +133,7 @@ where 1 = 1
 	}
 	rows, err := r.db.Query(c, sql, params)
 	if err != nil {
+		logger.Error("Could not query database", zap.String("db_msg", err.Error()))
 		return nil, err
 	}
 
@@ -155,6 +158,7 @@ where 1 = 1
 			&g.Title,
 		)
 		if err != nil {
+			logger.Error(err.Error())
 			return nil, err
 		}
 
@@ -167,6 +171,7 @@ where 1 = 1
 	}
 	err = rows.Err()
 	if err != nil {
+		logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -199,21 +204,25 @@ returning id
 		movie.TrailerUrl,
 		movie.PosterUrl,
 	)
+	logger := logger.GetLogger()
 
 	err = row.Scan(&id)
 	if err != nil {
+		logger.Error("Could not query database", zap.String("db_msg", err.Error()))
 		return 0, nil
 	}
 
 	for _, genre := range movie.Genres {
 		_, err = tx.Exec(c, "insert into movies_genres(movie_id, genre_id) values($1, $2)", id, genre.Id)
 		if err != nil {
+			logger.Error(err.Error())
 			return 0, err
 		}
 	}
 
 	err = tx.Commit(c)
 	if err != nil {
+		logger.Error(err.Error())
 		return 0, nil
 	}
 
@@ -246,23 +255,28 @@ where id = $7
 		updatedMovie.TrailerUrl,
 		updatedMovie.PosterUrl,
 		id)
+	logger := logger.GetLogger()
 	if err != nil {
+		logger.Error("Could not update database", zap.String("db_msg", err.Error()))
 		return err
 	}
 
 	_, err = tx.Exec(c, "delete from movies_genres where movie_id = $1", id)
 	if err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 	for _, genre := range updatedMovie.Genres {
 		_, err = tx.Exec(c, "insert into movies_genres(movie_id, genre_id) values($1, $2)", id, genre.Id)
 		if err != nil {
+			logger.Error(err.Error())
 			return err
 		}
 	}
 
 	err = tx.Commit(c)
 	if err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -274,19 +288,22 @@ func (r *MoviesRepository) Delete(c context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-
+	logger := logger.GetLogger()
 	_, err = tx.Exec(c, "delete from movies_genres where movie_id = $1", id)
 	if err != nil {
+		logger.Error("Could not delete database", zap.String("db_msg", err.Error()))
 		return err
 	}
 
 	_, err = tx.Exec(c, "delete from movies where id = $1", id)
 	if err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
 	err = tx.Commit(c)
 	if err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -294,8 +311,10 @@ func (r *MoviesRepository) Delete(c context.Context, id int) error {
 }
 
 func (r *MoviesRepository) SetRating(c context.Context, id int, rating int) error {
+	logger := logger.GetLogger()
 	_, err := r.db.Exec(c, "update movies set rating = $1 where id = $2", rating, id)
 	if err != nil {
+		logger.Error("Could not set rating", zap.String("db_msg", err.Error()))
 		return err
 	}
 
@@ -303,8 +322,10 @@ func (r *MoviesRepository) SetRating(c context.Context, id int, rating int) erro
 }
 
 func (r *MoviesRepository) SetWatched(c context.Context, id int, isWatched bool) error {
+	logger := logger.GetLogger()
 	_, err := r.db.Exec(c, "update movies set is_watched = $1 where id = $2", isWatched, id)
 	if err != nil {
+		logger.Error("Could not set isWatched", zap.String("db_msg", err.Error()))
 		return err
 	}
 

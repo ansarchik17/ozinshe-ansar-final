@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"goozinshe/logger"
 	"goozinshe/models"
 	"goozinshe/repositories"
 	"net/http"
@@ -18,9 +20,9 @@ func NewUsersHandlers(repo *repositories.UsersRepository) *UsersHandlers {
 }
 
 type createUserRequest struct {
-	Name     string
-	Email    string
-	Password string
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type userResponse struct {
@@ -47,15 +49,17 @@ type changePasswordRequest struct {
 }
 
 func (h *UsersHandlers) Create(c *gin.Context) {
+	logger := logger.GetLogger()
 	var request createUserRequest
 	err := c.BindJSON(&request)
 	if err != nil {
+		logger.Error("Could not parse request", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid payload"))
 		return
 	}
-
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to hash password"))
 		return
 	}
@@ -68,6 +72,7 @@ func (h *UsersHandlers) Create(c *gin.Context) {
 
 	id, err := h.repo.Create(c, user)
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, models.NewApiError("could not create user"))
 		return
 	}
@@ -76,8 +81,10 @@ func (h *UsersHandlers) Create(c *gin.Context) {
 }
 
 func (h *UsersHandlers) FindAll(c *gin.Context) {
+	logger := logger.GetLogger()
 	users, err := h.repo.FindAll(c)
 	if err != nil {
+		logger.Error("Could not find users", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to find users"))
 		return
 	}
@@ -94,14 +101,17 @@ func (h *UsersHandlers) FindAll(c *gin.Context) {
 }
 
 func (h *UsersHandlers) FindById(c *gin.Context) {
+	logger := logger.GetLogger()
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		logger.Error("Could not parse id", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.NewApiError("Invalid user id"))
 		return
 	}
 	user, err := h.repo.FindById(c, id)
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, models.NewApiError("could not find user"))
 		return
 	}
@@ -114,9 +124,11 @@ func (h *UsersHandlers) FindById(c *gin.Context) {
 }
 
 func (h *UsersHandlers) Update(c *gin.Context) {
+	logger := logger.GetLogger()
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		logger.Error("Could not parse id", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid user Id"))
 		return
 	}
@@ -129,6 +141,7 @@ func (h *UsersHandlers) Update(c *gin.Context) {
 
 	user, err := h.repo.FindById(c, id)
 	if err != nil {
+		logger.Error("Could not find user", zap.String("id", idStr), zap.Error(err))
 		c.JSON(http.StatusNotFound, models.NewApiError("User not found"))
 		return
 	}
@@ -138,6 +151,7 @@ func (h *UsersHandlers) Update(c *gin.Context) {
 
 	err = h.repo.Update(c, id, user)
 	if err != nil {
+		logger.Error("Could not update user", zap.String("id", idStr), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
@@ -146,27 +160,32 @@ func (h *UsersHandlers) Update(c *gin.Context) {
 }
 
 func (h *UsersHandlers) ChangePassword(c *gin.Context) {
+	logger := logger.GetLogger()
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		logger.Error("Could not parse id", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid user Id"))
 		return
 	}
 
 	var request changePasswordRequest
 	if err := c.BindJSON(&request); err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid request payload"))
 		return
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to hash password"))
 		return
 	}
 
 	user, err := h.repo.FindById(c, id)
 	if err != nil {
+		logger.Error("Could not find user", zap.String("id", idStr), zap.Error(err))
 		c.JSON(http.StatusNotFound, models.NewApiError("User not found"))
 		return
 	}
@@ -175,6 +194,7 @@ func (h *UsersHandlers) ChangePassword(c *gin.Context) {
 
 	err = h.repo.ChangePassword(c, id, string(passwordHash))
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
@@ -183,14 +203,17 @@ func (h *UsersHandlers) ChangePassword(c *gin.Context) {
 }
 
 func (h *UsersHandlers) Delete(c *gin.Context) {
+	logger := logger.GetLogger()
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		logger.Error("Could not parse id", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid user Id"))
 		return
 	}
 	_, err = h.repo.FindById(c, id)
 	if err != nil {
+		logger.Error("Could not find user", zap.String("id", idStr), zap.Error(err))
 		c.JSON(http.StatusNotFound, models.NewApiError("User not found"))
 		return
 	}

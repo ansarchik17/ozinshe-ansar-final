@@ -13,13 +13,14 @@ import (
 
 func AuthMiddleware(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
-	if authHeader != "" {
+	if authHeader == "" {
 		c.JSON(http.StatusUnauthorized, models.NewApiError("authorization header required"))
 		c.Abort()
 		return
 	}
 
-	tokenString := strings.Split(authHeader, "Bearer ")[1]
+	//tokenString := strings.Split(authHeader, "Bearer ")[1]
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.Config.JwtSecretKey), nil
 	})

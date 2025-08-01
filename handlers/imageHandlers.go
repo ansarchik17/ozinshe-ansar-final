@@ -14,6 +14,16 @@ func NewImageHandlers() *ImageHandlers {
 	return &ImageHandlers{}
 }
 
+// HandleGetImageById godoc
+// @Summary Get image by id
+// @Tags images
+// @Accept json
+// @Produce json
+// @Param imageId path int true "Image id"
+// @Success 200
+// @Failure 400 {object} models.ApiError "Invalid image id"
+// @Failure 500 {object} models.ApiError
+// @Router /images/{imageId} [get]
 func (h *ImageHandlers) HandleGetImageById(c *gin.Context) {
 	imageId := c.Param("imageId")
 	if imageId == "" {

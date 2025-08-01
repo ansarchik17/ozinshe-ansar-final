@@ -27,6 +27,14 @@ type signInRequest struct {
 	Password string
 }
 
+// SignIn godoc
+// @Summary Sign in
+// @Tags authorization
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /auth/{signIn} [post]
 func (h *AuthHandlers) SignIn(c *gin.Context) {
 	logger := logger.GetLogger()
 	var request signInRequest
@@ -62,10 +70,27 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
 
+// SignOut godoc
+// @Summary Sign out
+// @Tags authorization
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /auth/signOut [post]
 func (h *AuthHandlers) SignOut(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// GetUserInfo godoc
+// @Summary Get user info
+// @Tags authorization
+// @Accept json
+// @Produce json
+// @Param userId path int true "User id"
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /auth/userInfo [get]
 func (h *AuthHandlers) GetUserInfo(c *gin.Context) {
 	logger := logger.GetLogger()
 	userId := c.GetInt("userId")

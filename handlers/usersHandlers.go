@@ -48,6 +48,15 @@ type changePasswordRequest struct {
 	Password string `json:"password"`
 }
 
+// Create godoc
+// @Summary Create a user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User data to create"
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /users [post]
 func (h *UsersHandlers) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 	var request createUserRequest
@@ -80,6 +89,14 @@ func (h *UsersHandlers) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
+// FindAll godoc
+// @Summary Get all users
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /users [get]
 func (h *UsersHandlers) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 	users, err := h.repo.FindAll(c)
@@ -100,6 +117,16 @@ func (h *UsersHandlers) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, dtos)
 }
 
+// FindById godoc
+// @Summary Find user by id
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User id"
+// @Success 200
+// @Failure 404 {object} models.ApiError "Invalid id"
+// @Failure 500 {object} models.ApiError
+// @Router /users/{id} [get]
 func (h *UsersHandlers) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")
@@ -123,6 +150,16 @@ func (h *UsersHandlers) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, r)
 }
 
+// Update godoc
+// @Summary Update user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User id"
+// @Success 200
+// @Failure 404 {object} models.ApiError "Invalid user id"
+// @Failure 500 {object} models.ApiError
+// @Router /users/{id} [put]
 func (h *UsersHandlers) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")
@@ -159,6 +196,15 @@ func (h *UsersHandlers) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// ChangePassword godoc
+// @Summary Change password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User id"
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /users/{id}/{changePassword} [patch]
 func (h *UsersHandlers) ChangePassword(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")
@@ -202,6 +248,16 @@ func (h *UsersHandlers) ChangePassword(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// Delete godoc
+// @Summary Delete a user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User id"
+// @Success 200
+// @Failure 400 {object} models.ApiError "Invalid id"
+// @Failure 500 {object} models.ApiError
+// @Router /users/{id} [delete]
 func (h *UsersHandlers) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")

@@ -20,6 +20,14 @@ func NewWatchlistHandler(moviesRepo *repositories.MoviesRepository, watchlistRep
 	return &WatchlistHandler{moviesRepo: moviesRepo, watchlistRepo: watchlistRepo}
 }
 
+// HandleGetMovies godoc
+// @Summary Get movies from watchlist
+// @Tags watchlist
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /watchlist [get]
 func (h *WatchlistHandler) HandleGetMovies(c *gin.Context) {
 	logger := logger.GetLogger()
 	movies, err := h.watchlistRepo.GetMoviesFromWatchlist(c)
@@ -32,6 +40,15 @@ func (h *WatchlistHandler) HandleGetMovies(c *gin.Context) {
 	c.JSON(http.StatusOK, movies)
 }
 
+// HandleAddMovie godoc
+// @Summary Add movie to the watchlist
+// @Tags watchlist
+// @Accept json
+// @Produce json
+// @Param movieId path int true "Movie id"
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /watchlist/{movieId} [post]
 func (h *WatchlistHandler) HandleAddMovie(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("movieId")
@@ -58,6 +75,15 @@ func (h *WatchlistHandler) HandleAddMovie(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// HandleRemoveMovie godoc
+// @Summary Remove the movie from watchlist
+// @Tags watchlist
+// @Accept json
+// @Produce json
+// @Param movieId path int true "Movie id"
+// @Success 200
+// @Failure 500 {object} models.ApiError
+// @Router /watchlist/{movieId} [delete]
 func (h *WatchlistHandler) HandleRemoveMovie(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("movieId")

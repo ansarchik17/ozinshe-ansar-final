@@ -21,6 +21,17 @@ func NewGenreHandlers(repo *repositories.GenresRepository) *GenreHandlers {
 	}
 }
 
+// FindById godoc
+// @Summary  Find by id
+// @Tags  genres
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Genre id"
+// @Success 200 {object} models.Genre "OK"
+// @Failure 400 {object} models.ApiError "Invalid Genre id"
+// @Failure 404 {object} models.ApiError "Genre not found"
+// @Failure 500 {object} models.ApiError
+// @Router /genres/{id} [get]
 func (h *GenreHandlers) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")
@@ -41,6 +52,14 @@ func (h *GenreHandlers) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, genre)
 }
 
+// FindAll godoc
+// @Summary     Find all genres
+// @Tags        genres
+// @Accept      json
+// @Produce     json
+// @Success     200 {array} models.Genre
+// @Failure     500 {object} models.ApiError
+// @Router      /genres [get]
 func (h *GenreHandlers) FindAll(c *gin.Context) {
 	genres, err := h.repo.FindAll(c)
 	if err != nil {
@@ -51,6 +70,15 @@ func (h *GenreHandlers) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, genres)
 }
 
+// Create godoc
+// @Summary     Create a new genre
+// @Tags        genres
+// @Accept      json
+// @Produce     json
+// @Param       genre body models.Genre true "Genre to create"
+// @Success     200 {object} map[string]int
+// @Failure     400 {object} models.ApiError
+// @Router      /genres [post]
 func (h *GenreHandlers) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 	var g models.Genre
@@ -73,6 +101,16 @@ func (h *GenreHandlers) Create(c *gin.Context) {
 	})
 }
 
+// Update godoc
+// @Summary Update a user
+// @Tags genres
+// @Accept json
+// @Produce json
+// @Param id path int true "Genre id"
+// @Param genre body models.Genre true "Updated genre data"
+// @Success 200
+// @Failure 400 {object} models.ApiError
+// @Router /genres/{id} [put]
 func (h *GenreHandlers) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")
@@ -108,6 +146,15 @@ func (h *GenreHandlers) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// Delete godoc
+// @Summary Delete a user
+// @Tags genres
+// @Accept json
+// @Produce json
+// @Param id path int true "Genre id"
+// @Success 200
+// @Failure 400 {object} models.ApiError
+// @Router /genres/{id} [delete]
 func (h *GenreHandlers) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 	idStr := c.Param("id")
